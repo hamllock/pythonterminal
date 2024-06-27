@@ -1,80 +1,68 @@
+from colors import c
+from item import Item
+
+
 class Inventory:
+    # Initialize the Inventory with an empty list of items and load the inventory from a file
     def __init__(self):
-        self.items = {}
-        self.inventory_file = "inventory.txt"
-        self.load_inventory()
+        self.items = []  # List to store item objects
+        self.inventory_file = "inventory.txt"  # File name where inventory is saved
+        self.load_inventory()  # Load inventory from the file
 
-    def add_item(self, name, quantity):
-        if name in self.items:
-            self.items[name] += quantity
-        else:
-            self.items[name] = quantity
-        print(f"Added {quantity} {name}(s).")
-        self.save_inventory()
+    # Retrieve an item by its name
+    def get_item(self, name):
+        for item in self.items:
+            if item.name == name:
+                return item
+        return None  # Return None if item not found
 
-    def remove_item(self, name, quantity):
-        if name not in self.items or self.items[name] < quantity:
-            print(f"Cannot remove {quantity} {name}(s). Not enough stock.")
-        else:
-            self.items[name] -= quantity
-            if self.items[name] == 0:
-                del self.items[name]
-            print(f"Removed {quantity} {name}(s).")
-            self.save_inventory()
+    # Add a new item to the inventory
+    def add_item(self, name, price, quantity):
+        self.items.append(Item(name, price, quantity))  # Create and add new item object to items list
+        self.save_inventory()  # Save the updated inventory to the file
 
+    # Edit an existing item's details
+    def edit_item(self, name, new_name=None, new_price=None, new_quantity=None):
+        item = self.get_item(name)  # Find the item by name
+        if item:
+            if new_name:
+                item.name = new_name  # Update name if provided
+            if new_price is not None:
+                item.price = new_price  # Update price if provided
+            if new_quantity is not None:
+                item.quantity = new_quantity  # Update quantity if provided
+            self.save_inventory()  # Save the updated inventory to the file
+
+    # Delete an item from the inventory
     def delete_item(self, name):
-        if name in self.items:
-            del self.items[name]
-            print(f"{name} deleted from inventory.")
-            self.save_inventory()
-        else:
-            print(f"{name} not found in inventory.")
+        self.items = [item for item in self.items if item.name != name]  # Remove item by name
+        self.save_inventory()  # Save the updated inventory to the file
 
-    def show_inventory(self):
-        if not self.items:
-            print("Inventory is empty.")
-        else:
-            for name, quantity in self.items.items():
-                print(f"{name}: {quantity}")
-
+    # Save the current state of the inventory to a file
     def save_inventory(self):
         with open(self.inventory_file, 'w') as file:
-            for name, quantity in self.items.items():
-                file.write(f"{name}:{quantity}\n")
+            for item in self.items:
+                file.write(f"{item.name},{item.price},{item.quantity}\n")  # Write each item as a line in the file
 
+    # Load the inventory from a file
     def load_inventory(self):
         try:
             with open(self.inventory_file, 'r') as file:
                 for line in file:
-                    name, quantity = line.strip().split(':')
-                    self.items[name] = int(quantity)
+                    name, price, quantity = line.strip().split(',')  # Parse each line to create item objects
+                    self.items.append(Item(name, float(price), int(quantity)))
         except FileNotFoundError:
-            print("Inventory file not found, starting with an empty inventory.")
+            pass  # Do nothing if file not found, start with an empty inventory
 
+    # Display the inventory in a formatted manner
+    def display_inventory(self):
+        print(f"\n{c.OKBLUE}Items in Stock ======================================{c.ENDC}")
+        print(f"{c.WARNING}{'Name':<20}{'Quantity':<15}{'Price':<10}{c.ENDC}")
+        for item in self.items:
+            print(f"{item.name:<20}{item.quantity:<15}{item.price:<10.2f}")
+        print(f"{c.OKBLUE}====================================================={c.ENDC}")
 
-def main():
-    inventory = Inventory()
-    while True:
-        print("\nCommands: add, remove, delete, show, exit")
-        command = input("Enter command: ").strip().lower()
-        if command == "exit":
-            break
-        elif command == "add":
-            name = input("Enter item name: ")
-            quantity = int(input("Enter quantity: "))
-            inventory.add_item(name, quantity)
-        elif command == "remove":
-            name = input("Enter item name: ")
-            quantity = int(input("Enter quantity: "))
-            inventory.remove_item(name, quantity)
-        elif command == "delete":
-            name = input("Enter item name to delete: ")
-            inventory.delete_item(name)
-        elif command == "show":
-            inventory.show_inventory()
-        else:
-            print("Invalid command.")
-
-
-if __name__ == "__main__":
-    main()
+    # Subtract a specified quantity of an item
+    def subtract_item(self, name, quantity):
+        item = self.get_item(name)  # Find the item by name
+        item.quantity -= quantity  # Subtract the specified quantity from the item's quantity
