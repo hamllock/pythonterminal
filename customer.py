@@ -38,7 +38,6 @@ class Customer:
             elif command == "4":
                 # Proceed to checkout
                 self.checkout_cart()
-                break
 
     def add_cart(self):
         # Add an item to the cart
