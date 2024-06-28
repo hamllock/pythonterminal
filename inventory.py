@@ -66,3 +66,4 @@ class Inventory:
     def subtract_item(self, name, quantity):
         item = self.get_item(name)  # Find the item by name
         item.quantity -= quantity  # Subtract the specified quantity from the item's quantity
+        self.save_inventory()  # Save the updated inventory to the file
